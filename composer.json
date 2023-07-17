@@ -1,0 +1,28 @@
+{
+    "name": "jasara/uuid",
+    "require": {
+        "ramsey/uuid": "^4.7",
+        "brick/math": "^0.11.0",
+        "paragonie/constant_time_encoding": "^2.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.2",
+        "spatie/ray": "^1.37"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jasara\\Uuid\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Zaid J. Barghouthi",
+            "email": "zaid.b@jasaratech.com"
+        }
+    ],
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    }
+}
