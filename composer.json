@@ -1,28 +1,42 @@
 {
     "name": "jasara/uuid",
-    "require": {
-        "ramsey/uuid": "^4.7",
-        "brick/math": "^0.11.0",
-        "paragonie/constant_time_encoding": "^2.6"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.2",
-        "spatie/ray": "^1.37"
-    },
-    "autoload": {
-        "psr-4": {
-            "Jasara\\Uuid\\": "src/"
-        }
-    },
+    "type": "library",
+    "keywords": [
+        "uuid",
+        "uuid80",
+        "identifier",
+        "rfc4122"
+    ],
     "authors": [
         {
             "name": "Zaid J. Barghouthi",
             "email": "zaid.b@jasaratech.com"
         }
     ],
+    "require": {
+        "php": "^8.1",
+        "brick/math": "^0.11.0",
+        "paragonie/constant_time_encoding": "^2.6"
+    },
+    "require-dev": {
+        "spatie/ray": "^1.37",
+        "pestphp/pest": "^2.11",
+        "ramsey/uuid": "^4.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jasara\\Uuid\\": "src/"
+        }
+    },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Jasara\\Uuid\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
     }
 }
