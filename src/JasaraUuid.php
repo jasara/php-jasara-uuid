@@ -4,48 +4,51 @@ declare(strict_types=1);
 
 namespace Jasara\Uuid;
 
-use Brick\Math\BigInteger;
 use DateTimeInterface;
 use ParagonIE\ConstantTime\Base32Hex;
+use Ramsey\Uuid\Uuid;
 use Stringable;
 
 final class JasaraUuid implements Stringable
 {
-    private static array $map;
-    private static array $map_inversed;
+    use StaticMap;
+    use ValidatesBinary;
+
+    private const STANDARD_PATTERN = '/^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})$/';
+    private const PREFIXED_PATTERN = '/^([a-z])+_([0-9a-v]{22})$/';
 
     private function __construct(
-        private readonly string $bytes,
+        private readonly string $binary,
+        ?bool $should_validate = true,
     ) {
-    }
-
-    public static function useMap(array $map): void
-    {
-        static::$map = [];
-        static::$map_inversed = [];
-
-        foreach($map as $key => $value) {
-            if (is_string($value)) {
-                static::$map[$key] = $value;
-                static::$map_inversed[$value] = $key;
-                continue;
-            }
-
-            if ($value instanceof JasaraUuidType) {
-                static::$map[$value->numeric()] = $value->prefix();
-                static::$map_inversed[$value->prefix()] = $value->numeric();
-                continue;
-            }
+        if ($should_validate) {
+            static::validateBinary($binary);
         }
     }
 
-    public static function getMap(): array
+    public static function from(string $uuid): static
     {
-        return static::$map;
+        $length = strlen($uuid);
+
+        if ($length === 36 && preg_match(static::STANDARD_PATTERN, $uuid, $matches)) {
+            return new static(hex2bin(implode(array_slice($matches, 1))));
+        }
+
+        if ($length > 23 && preg_match(static::PREFIXED_PATTERN, $uuid)) {
+            return static::fromPrefixed($uuid);
+        }
+
+        if ($length === 16) {
+            return new static($uuid);
+        }
+
+        throw JasaraUuidException::invalidUuid();
     }
 
-    public static function generate(int|JasaraUuidType $type, ?DateTimeInterface $datetime = null): static
-    {
+    public static function generate(
+        int|JasaraUuidType $type,
+        ?DateTimeInterface $datetime = null,
+    ): static {
         if ($type instanceof JasaraUuidType) {
             $type = $type->numeric();
         }
@@ -54,25 +57,53 @@ final class JasaraUuid implements Stringable
             throw JasaraUuidException::outOfBoundType();
         }
 
-        $epoch_ms = $datetime
-                ? $datetime->format('Uv')
-                : (new \DateTime())->format('Uv');
+        // unpack uuid7
+        $shorts = unpack('n*', Uuid::uuid7($datetime)->getBytes());
 
-        $ts =  PHP_INT_SIZE >= 8
-            ? substr(pack('J', (int) $epoch_ms), -6)
-            : str_pad(BigInteger::of($epoch_ms)->toBytes(false), 6, "\x00", STR_PAD_LEFT);
+        // set type and change version to 8
+        $shorts[4] = $type | 0x8000;
 
-        list(
-            1 => $rnd_hi,
-            2 => $rnd_low,
-        ) = unpack('N2', random_bytes(8));
+        // set variant
+        $shorts[5] = $shorts[5] & 0x3fff | 0x8000;
 
-        return new static($ts . pack('nN2', $type | 0x8000, $rnd_hi & 0x3fffffff | 0x80000000, $rnd_low & 0x3fffffff));
+        // reset reserved bits
+        $shorts[7] = $shorts[7] & 0x3fff;
+
+        return new static(pack('n*', ...$shorts), false);
     }
 
-    public function __toString(): string
+    // public static function generate(
+    //     int|JasaraUuidType $type,
+    //     ?DateTimeInterface $datetime = null,
+    // ): static {
+    //     if ($type instanceof JasaraUuidType) {
+    //         $type = $type->numeric();
+    //     }
+
+    //     if ($type < 0 || $type > 0xfff) {
+    //         throw JasaraUuidException::outOfBoundType();
+    //     }
+
+    //     $epoch_ms = $datetime
+    //             ? $datetime->format('Uv')
+    //             : (new \DateTime())->format('Uv');
+
+    //     $ts =  PHP_INT_SIZE >= 8
+    //         ? substr(pack('J', (int) $epoch_ms), -6)
+    //         : str_pad(BigInteger::of($epoch_ms)->toBytes(false), 6, "\x00", STR_PAD_LEFT);
+
+    //     list(1 => $rnd_hi, 2 => $rnd_low) = unpack('N2', random_bytes(8));
+
+    //     $type |= 0x8000;
+    //     $rnd_hi = $rnd_hi & 0x3fffffff | 0x80000000;
+    //     $rnd_low &= 0x3fffffff;
+
+    //     return new static($ts . pack('nN2', $type, $rnd_hi, $rnd_low), false);
+    // }
+
+    public function toStandard(): string
     {
-        $hex = bin2hex($this->bytes);
+        $hex = bin2hex($this->binary);
 
         return substr($hex, 0, 8)
             . '-'
@@ -86,17 +117,16 @@ final class JasaraUuid implements Stringable
         ;
     }
 
-    public function prefixed(): string
+    public function __toString(): string
     {
-        $shorts = unpack('n*', $this->bytes);
+        return $this->toStandard();
+    }
 
-        $type = $shorts[4] & 0x3fff;
+    public function toPrefixed(): string
+    {
+        $shorts = unpack('n*', $this->binary);
 
-        if (! array_key_exists($type, static::$map)) {
-            throw JasaraUuidException::undefinedType($type);
-        }
-
-        $prefix = static::$map[$type];
+        $prefix = static::getPrefix($shorts[4] & 0xfff);
 
         $shorts = [
             ...array_slice($shorts, 4, 4),
@@ -112,19 +142,11 @@ final class JasaraUuid implements Stringable
         return $prefix . '_' . substr(Base32Hex::encode(pack('n*', ...$shorts)), 0, 22);
     }
 
-    public static function fromPrefixed(string $prefixed): static
+    private static function fromPrefixed(string $prefixed): static
     {
-        if (1 !== preg_match('/^[a-z]+_[0-9a-v]{22}$/', $prefixed)) {
-            throw JasaraUuidException::invalidPrefixed($prefixed);
-        }
-
         list($prefix, $rest) = explode('_', $prefixed);
 
-        if (! array_key_exists($prefix, static::$map_inversed)) {
-            throw JasaraUuidException::undefinedPrefix($prefix);
-        }
-
-        $type = static::$map_inversed[$prefix];
+        $type = static::getType($prefix);
 
         $shorts = unpack('n*', Base32Hex::decode($rest));
 

@@ -64,11 +64,11 @@ describe('useMap', function () {
 describe('generate', function () {
 
     it('generates valid uuid')
-        ->expect(fn () => (new Ramsey\Uuid\Rfc4122\Validator())->validate((string) JasaraUuid::generate(random_int(0, 4095))))
+        ->expect(fn () => (new Ramsey\Uuid\Rfc4122\Validator())->validate(JasaraUuid::generate(random_int(0, 4095))->toStandard()))
         ->toBeTrue();
 
     it('generates version 8 uuid')
-        ->expect(fn () => (string) JasaraUuid::generate(0))
+        ->expect(fn () => JasaraUuid::generate(0)->toStandard())
         ->toMatch('/[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{8}/');
 
     it('generates uuid for given type', function (int $type) {
@@ -76,17 +76,17 @@ describe('generate', function () {
 
         $typeHex = str_pad(dechex($type), 3, "0", STR_PAD_LEFT);
 
-        expect((string) $uuid)
+        expect($uuid->toStandard())
             ->toMatch("/[0-9a-f]{8}-[0-9a-f]{4}-8$typeHex-[0-9a-f]{4}-[0-9a-f]{8}/");
     })->with([0, 10, 530, 4095]);
 
     test('bits 96 and 97 are always zero')
-        ->expect(fn () => (string) JasaraUuid::generate(random_int(0, 4095)))
+        ->expect(fn () => JasaraUuid::generate(random_int(0, 4095))->toStandard())
         ->toMatch("/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}[0-3][0-9a-f]{3}/");
 
     // 2024-05-19 06:35:10.391 UTC in Unix Epoch (hex) = 018f 8f8f 8f8f
     it('generates uuid for type from type and timestamp')
-        ->expect(fn () => (string) JasaraUuid::generate(0xabc, new DateTime("2024-05-19 06:35:01.391")))
+        ->expect(fn () => JasaraUuid::generate(0xabc, new DateTime("2024-05-19 06:35:01.391"))->toStandard())
         ->toMatch('/018f8f8f-8f8f-8abc-[0-9a-f]{4}-[0-9a-f]{12}/');
 
     it('fails to generate for type outside 0 - 4095')
@@ -107,31 +107,13 @@ describe('generate', function () {
         };
         JasaraUuid::useMap([$jasaraUuidType]);
 
-        expect((string) JasaraUuid::generate($jasaraUuidType))
+        expect(JasaraUuid::generate($jasaraUuidType)->toStandard())
             ->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-8101-[0-9a-f]{4}-[0-9a-f]{12}$/');
 
     });
 });
 
-describe('prefixed', function () {
-    beforeEach(function () {
-        JasaraUuid::useMap([
-            0 => 'usr',
-            1 => 'ord',
-            2 => 'sh',
-        ]);
-    });
-
-    it('returns prefixed base32hex unpadded encoded string')
-        ->expect(fn () => JasaraUuid::generate(0)->prefixed())
-        ->toMatch('/usr_[0-9a-v]{22}/');
-
-    it('fails if type is not defined')
-        ->expect(fn () => fn () => JasaraUuid::generate(20)->prefixed())
-        ->toThrow(JasaraUuidException::class, "Type '20' does not have a corresponding prefix value.");
-});
-
-describe('fromPrefixed', function () {
+describe('from:prefixed', function () {
 
     beforeEach(function () {
         JasaraUuid::useMap([
@@ -145,15 +127,15 @@ describe('fromPrefixed', function () {
 
         $uuid = JasaraUuid::generate(2);
 
-        $prefixed = $uuid->prefixed();
+        $prefixed = $uuid->toPrefixed();
 
-        $fromPrefixed = JasaraUuid::fromPrefixed($prefixed);
+        $fromPrefixed = JasaraUuid::from($prefixed);
 
-        expect((string) $fromPrefixed)->toEqual((string)$uuid);
+        expect($fromPrefixed->toStandard())->toEqual($uuid->toStandard());
     });
 
     it('fails if prefix is not defined')
-        ->expect(fn () => fn () => JasaraUuid::fromPrefixed('proj_aj81um6u90h7g1h709k02p'))
+        ->expect(fn () => fn () => JasaraUuid::from('proj_aj81um6u90h7g1h709k02p'))
         ->toThrow(JasaraUuidException::class);
 
     it('fails if ill formatted')
@@ -165,6 +147,46 @@ describe('fromPrefixed', function () {
             'usr_usr_74pl5s7s4q6m01h70c3ttt',
             'usr_000074pl5s7s4q6m01h70c3ttt',
             ])
-        ->expect(fn ($prefixed) => fn () => JasaraUuid::fromPrefixed($prefixed))
+        ->expect(fn ($prefixed) => fn () => JasaraUuid::from($prefixed))
         ->toThrow(JasaraUuidException::class);
+});
+
+describe('from:standard', function () {
+    it('creates instance from standard string', function () {
+        $standard = '0189c615-1562-8fff-9f68-d29f0ae92e1d';
+        $uuid = JasaraUuid::from($standard);
+        expect($uuid->toStandard())->toBe($standard);
+    });
+});
+
+describe('from', function () {
+    it('fails if string is not valid uuid')
+        ->with(['0', '0jj9c615-1562-8fff-9f68-d29f0ae92e1d', 'my-id', '0189c615--1562-8fff-9f68-d29f0ae92e1d'])
+        ->expect(fn ($string) => fn () => JasaraUuid::from($string))
+        ->toThrow(Exception::class);
+});
+
+describe('toPrefixed', function () {
+    beforeEach(function () {
+        JasaraUuid::useMap([
+            0 => 'usr',
+            1 => 'ord',
+            2 => 'sh',
+        ]);
+    });
+
+    it('returns prefixed base32hex unpadded encoded string')
+        ->expect(fn () => JasaraUuid::generate(0)->toPrefixed())
+        ->toMatch('/usr_[0-9a-v]{22}/');
+
+    it('fails if type is not defined')
+        ->expect(fn () => fn () => JasaraUuid::generate(20)->toPrefixed())
+        ->toThrow(JasaraUuidException::class, "Type '20' does not have a corresponding prefix value.");
+});
+
+describe('string casting', function () {
+    test('returns standard string', function () {
+        $uuid = JasaraUuid::generate(0);
+        expect($uuid->toStandard())->toBe((string) $uuid);
+    });
 });
