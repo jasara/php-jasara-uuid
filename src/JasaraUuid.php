@@ -46,11 +46,15 @@ final class JasaraUuid implements Stringable
     }
 
     public static function generate(
-        int|JasaraUuidType $type,
+        int|string|JasaraUuidType $type,
         ?DateTimeInterface $datetime = null,
     ): static {
         if ($type instanceof JasaraUuidType) {
             $type = $type->numeric();
+        }
+
+        if (is_string($type)) {
+            $type = static::getType($type);
         }
 
         if ($type < 0 || $type > 0xfff) {
@@ -135,7 +139,7 @@ final class JasaraUuid implements Stringable
 
         // shift left 2
         for($i = 0; $i < 7; $i++) {
-            $carry = ($i < 6 ? $shorts[$i+1] : 0) >> 14;
+            $carry = ($i < 6 ? $shorts[$i + 1] : 0) >> 14;
             $shorts[$i] = ($shorts[$i] & 0x3fff) << 2 | $carry;
         }
 

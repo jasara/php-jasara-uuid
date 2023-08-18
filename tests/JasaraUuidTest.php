@@ -111,6 +111,21 @@ describe('generate', function () {
             ->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-8101-[0-9a-f]{4}-[0-9a-f]{12}$/');
 
     });
+
+    it('can take prefix for $type', function () {
+        JasaraUuid::useMap([0x10 => 'prod']);
+
+        expect(JasaraUuid::generate('prod')->toStandard())
+            ->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-8010-[0-9a-f]{4}-[0-9a-f]{12}$/');
+    });
+
+    it('fails if given prefix not in map', function () {
+        JasaraUuid::useMap([0x10 => 'prod']);
+
+        expect(fn () => JasaraUuid::generate('other')->toStandard())
+            ->toThrow(JasaraUuidException::class, "Prefix 'other' does not have a corresponding type value.");
+    });
+
 });
 
 describe('from:prefixed', function () {
