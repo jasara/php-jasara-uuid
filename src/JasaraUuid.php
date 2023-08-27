@@ -14,7 +14,7 @@ final class JasaraUuid implements Stringable
     use StaticMap;
     use ValidatesBinary;
 
-    private const STANDARD_PATTERN = '/^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})$/';
+    private const STANDARD_PATTERN = '/^([0-9a-f]{8})-([0-9a-f]{4})-(8[0-7][0-9a-f]{2})-([0-9a-f]{4})-([0-9a-f]{12})$/';
     private const PREFIXED_PATTERN = '/^([a-z])+_([0-9a-v]{22})$/';
 
     private function __construct(
@@ -57,7 +57,7 @@ final class JasaraUuid implements Stringable
             $type = static::getType($type);
         }
 
-        if ($type < 0 || $type > 0xfff) {
+        if ($type < 0 || $type > 0x7ff) {
             throw JasaraUuidException::outOfBoundType();
         }
 
@@ -66,12 +66,6 @@ final class JasaraUuid implements Stringable
 
         // set type and change version to 8
         $shorts[4] = $type | 0x8000;
-
-        // set variant
-        $shorts[5] = $shorts[5] & 0x3fff | 0x8000;
-
-        // reset reserved bits
-        $shorts[7] = $shorts[7] & 0x3fff;
 
         return new static(pack('n*', ...$shorts), false);
     }
@@ -84,7 +78,7 @@ final class JasaraUuid implements Stringable
     //         $type = $type->numeric();
     //     }
 
-    //     if ($type < 0 || $type > 0xfff) {
+    //     if ($type < 0 || $type > 0x7ff) {
     //         throw JasaraUuidException::outOfBoundType();
     //     }
 

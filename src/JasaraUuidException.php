@@ -29,7 +29,7 @@ final class JasaraUuidException extends Exception
 
     public static function outOfBoundType(): static
     {
-        return new static('type must be between 0 and 4095 inclusive.');
+        return new static('type must be between 0 and 2047 inclusive.');
     }
 
     public static function undefinedPrefix(string $prefix): static

@@ -64,7 +64,7 @@ describe('useMap', function () {
 describe('generate', function () {
 
     it('generates valid uuid')
-        ->expect(fn () => (new Ramsey\Uuid\Rfc4122\Validator())->validate(JasaraUuid::generate(random_int(0, 4095))->toStandard()))
+        ->expect(fn () => (new Ramsey\Uuid\Rfc4122\Validator())->validate(JasaraUuid::generate(random_int(0, 2047))->toStandard()))
         ->toBeTrue();
 
     it('generates version 8 uuid')
@@ -78,19 +78,15 @@ describe('generate', function () {
 
         expect($uuid->toStandard())
             ->toMatch("/[0-9a-f]{8}-[0-9a-f]{4}-8$typeHex-[0-9a-f]{4}-[0-9a-f]{8}/");
-    })->with([0, 10, 530, 4095]);
-
-    test('bits 96 and 97 are always zero')
-        ->expect(fn () => JasaraUuid::generate(random_int(0, 4095))->toStandard())
-        ->toMatch("/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}[0-3][0-9a-f]{3}/");
+    })->with([0, 10, 530, 2047]);
 
     // 2024-05-19 06:35:10.391 UTC in Unix Epoch (hex) = 018f 8f8f 8f8f
     it('generates uuid for type from type and timestamp')
-        ->expect(fn () => JasaraUuid::generate(0xabc, new DateTime("2024-05-19 06:35:01.391"))->toStandard())
-        ->toMatch('/018f8f8f-8f8f-8abc-[0-9a-f]{4}-[0-9a-f]{12}/');
+        ->expect(fn () => JasaraUuid::generate(0x7cd, new DateTime("2024-05-19 06:35:01.391"))->toStandard())
+        ->toMatch('/018f8f8f-8f8f-87cd-[0-9a-f]{4}-[0-9a-f]{12}/');
 
-    it('fails to generate for type outside 0 - 4095')
-        ->with([-1000, -1, 4096, 5000, 20000])
+    it('fails to generate for type outside 0 - 2047')
+        ->with([-1000, -1, 2048, 5000, 20000])
         ->expect(fn ($type) => fn () => JasaraUuid::generate($type))
         ->toThrow(JasaraUuidException::class);
 
@@ -168,7 +164,7 @@ describe('from:prefixed', function () {
 
 describe('from:standard', function () {
     it('creates instance from standard string', function () {
-        $standard = '0189c615-1562-8fff-9f68-d29f0ae92e1d';
+        $standard = '0189c615-1562-87ff-9f68-d29f0ae92e1d';
         $uuid = JasaraUuid::from($standard);
         expect($uuid->toStandard())->toBe($standard);
     });
@@ -176,7 +172,7 @@ describe('from:standard', function () {
 
 describe('from', function () {
     it('fails if string is not valid uuid')
-        ->with(['0', '0jj9c615-1562-8fff-9f68-d29f0ae92e1d', 'my-id', '0189c615--1562-8fff-9f68-d29f0ae92e1d'])
+        ->with(['0', '0jj9c615-1562-87ff-9f68-d29f0ae92e1d', 'my-id', '0189c615--1562-87ff-9f68-d29f0ae92e1d'])
         ->expect(fn ($string) => fn () => JasaraUuid::from($string))
         ->toThrow(Exception::class);
 });
