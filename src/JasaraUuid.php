@@ -11,8 +11,8 @@ use Stringable;
 
 final class JasaraUuid implements Stringable
 {
-    use StaticMap;
-    use ValidatesBinary;
+    use WithStaticMap;
+    use WithBinaryValidation;
 
     private const STANDARD_PATTERN = '/^([0-9a-f]{8})-([0-9a-f]{4})-(8[0-7][0-9a-f]{2})-([0-9a-f]{4})-([0-9a-f]{12})$/';
     private const PREFIXED_PATTERN = '/^([a-z])+_([0-9a-v]{22})$/';

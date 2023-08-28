@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jasara\Uuid;
 
-trait StaticMap
+trait WithStaticMap
 {
     private static array $map;
     private static array $map_inversed;

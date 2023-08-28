@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Jasara\Uuid;
 
-trait ValidatesBinary
+trait WithBinaryValidation
 {
     private static function validateBinary(string $binary): void
     {
