@@ -8,12 +8,13 @@ trait ValidatesBinary
 {
     private static function validateBinary(string $binary): void
     {
-        $bytes = unpack('C*', $binary);
+        $shorts = unpack('n*', $binary);    // unpack into 8 x 16bit unsigned integers
 
         if (
-            count($bytes) !== 16 || // 128 bits
-            $bytes[7] >> 4 !== 8 || // version
-            $bytes[9] >> 6 !== 2    // variant
+            count($shorts) !== 8            // length
+            || $shorts[4] >> 12 !== 8       // version
+            || ($shorts[4] & 0xfff) > 0x7ff // max type
+            || $shorts[5] >> 14 !== 2       // variant
         ) {
             throw JasaraUuidException::invalidUuid();
         }
