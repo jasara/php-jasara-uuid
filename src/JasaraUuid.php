@@ -70,35 +70,6 @@ final class JasaraUuid implements Stringable
         return new static(pack('n*', ...$shorts), false);
     }
 
-    // public static function generate(
-    //     int|JasaraUuidType $type,
-    //     ?DateTimeInterface $datetime = null,
-    // ): static {
-    //     if ($type instanceof JasaraUuidType) {
-    //         $type = $type->numeric();
-    //     }
-
-    //     if ($type < 0 || $type > 0x7ff) {
-    //         throw JasaraUuidException::outOfBoundType();
-    //     }
-
-    //     $epoch_ms = $datetime
-    //             ? $datetime->format('Uv')
-    //             : (new \DateTime())->format('Uv');
-
-    //     $ts =  PHP_INT_SIZE >= 8
-    //         ? substr(pack('J', (int) $epoch_ms), -6)
-    //         : str_pad(BigInteger::of($epoch_ms)->toBytes(false), 6, "\x00", STR_PAD_LEFT);
-
-    //     list(1 => $rnd_hi, 2 => $rnd_low) = unpack('N2', random_bytes(8));
-
-    //     $type |= 0x8000;
-    //     $rnd_hi = $rnd_hi & 0x3fffffff | 0x80000000;
-    //     $rnd_low &= 0x3fffffff;
-
-    //     return new static($ts . pack('nN2', $type, $rnd_hi, $rnd_low), false);
-    // }
-
     public function toStandard(): string
     {
         $hex = bin2hex($this->binary);
