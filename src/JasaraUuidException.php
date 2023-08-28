@@ -22,11 +22,6 @@ final class JasaraUuidException extends Exception
         return new static('Invalid Uuid.');
     }
 
-    public static function emptyMap(): static
-    {
-        return new static('Map cannot be empty.');
-    }
-
     public static function outOfBoundType(): static
     {
         return new static('type must be between 0 and 2047 inclusive.');
@@ -40,15 +35,5 @@ final class JasaraUuidException extends Exception
     public static function undefinedType(int $type): static
     {
         return new static("Type '$type' does not have a corresponding prefix value.");
-    }
-
-    public static function invalidString(string $string): static
-    {
-        return new static("Given string value '$string' is invalid.");
-    }
-
-    public static function invalidPrefixed(string $prefixed): static
-    {
-        return new static("Given prefixed value '$prefixed' is invalid.");
     }
 }
