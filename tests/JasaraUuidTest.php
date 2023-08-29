@@ -186,9 +186,9 @@ describe('toPrefixed', function () {
         ]);
     });
 
-    it('returns prefixed base32hex unpadded encoded string')
+    it('returns prefixed Base32WordSafe unpadded encoded string')
         ->expect(fn () => JasaraUuid::generate(0)->toPrefixed())
-        ->toMatch('/usr_[0-9a-v]{22}/');
+        ->toMatch('/usr_[23456789CFGHJMPQRVWXcfghjmpqrvwx]{22}/');
 
     it('fails if type is not defined')
         ->expect(fn () => fn () => JasaraUuid::generate(20)->toPrefixed())

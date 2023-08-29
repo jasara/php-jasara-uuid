@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Jasara\Uuid;
 
 use DateTimeInterface;
-use ParagonIE\ConstantTime\Base32Hex;
+use Jasara\Uuid\Base32WordSafe;
 use Ramsey\Uuid\Uuid;
 use Stringable;
 
@@ -15,7 +15,7 @@ final class JasaraUuid implements Stringable
     use WithBinaryValidation;
 
     private const STANDARD_PATTERN = '/^([0-9a-f]{8})-([0-9a-f]{4})-(8[0-7][0-9a-f]{2})-([0-9a-f]{4})-([0-9a-f]{12})$/';
-    private const PREFIXED_PATTERN = '/^([a-z])+_([0-9a-v]{22})$/';
+    private const PREFIXED_PATTERN = '/^([a-z])+_([23456789CFGHJMPQRVWXcfghjmpqrvwx]{22})$/';
 
     private function __construct(
         private readonly string $binary,
@@ -108,7 +108,7 @@ final class JasaraUuid implements Stringable
             $shorts[$i] = ($shorts[$i] & 0x3fff) << 2 | $carry;
         }
 
-        return $prefix . '_' . substr(Base32Hex::encode(pack('n*', ...$shorts)), 0, 22);
+        return $prefix . '_' . substr(Base32WordSafe::encode(pack('n*', ...$shorts)), 0, 22);
     }
 
     private static function fromPrefixed(string $prefixed): static
@@ -117,7 +117,7 @@ final class JasaraUuid implements Stringable
 
         $type = static::getType($prefix);
 
-        $shorts = unpack('n*', Base32Hex::decode($rest));
+        $shorts = unpack('n*', Base32WordSafe::decode($rest));
 
         // shift right 2
         for($i = 1, $carry = 0; $i <= 7; $i++) {
