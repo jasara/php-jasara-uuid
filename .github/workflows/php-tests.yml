@@ -3,9 +3,6 @@ name: Test
 on: push
 
 jobs:
-  check-skip:
-    runs-on: ubuntu-latest       
-
   run-tests:   
     steps:
       - name: Checkout code
