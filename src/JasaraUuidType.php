@@ -7,5 +7,6 @@ namespace Jasara\Uuid;
 interface JasaraUuidType
 {
     public function prefix(): string;
+
     public function numeric(): int;
 }

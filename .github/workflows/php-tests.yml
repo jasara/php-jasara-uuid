@@ -16,5 +16,5 @@ jobs:
           coverage: pcov          
       - name: Install Project Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader              
-      - name: PHPUnit
+      - name: Run Tests
         run: php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" ./vendor/bin/pest --coverage-clover=coverage.xml      

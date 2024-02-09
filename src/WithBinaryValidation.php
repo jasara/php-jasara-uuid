@@ -13,7 +13,7 @@ trait WithBinaryValidation
         if (
             count($shorts) !== 8            // length
             || $shorts[4] >> 12 !== 8       // version
-            || ($shorts[4] & 0xfff) > 0x7ff // max type
+            || ($shorts[4] & 0xFFF) > 0x7FF // max type
             || $shorts[5] >> 14 !== 2       // variant
         ) {
             throw JasaraUuidException::invalidUuid();

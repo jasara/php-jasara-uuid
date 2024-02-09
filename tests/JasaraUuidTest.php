@@ -5,7 +5,6 @@ use Jasara\Uuid\JasaraUuidException;
 use Jasara\Uuid\JasaraUuidType;
 
 describe('useMap', function () {
-
     test('sets map (int => string)', function () {
         JasaraUuid::useMap([
             0 => 'zero',
@@ -31,7 +30,7 @@ describe('useMap', function () {
     });
 
     test('map can be JasaraUuidType[]', function () {
-        $generateType = fn (int $numeric, string $prefix) => new class ($numeric, $prefix) implements JasaraUuidType {
+        $generateType = fn (int $numeric, string $prefix) => new class($numeric, $prefix) implements JasaraUuidType {
             public function __construct(
                 private int $numeric,
                 private string $prefix,
@@ -51,7 +50,7 @@ describe('useMap', function () {
 
         JasaraUuid::useMap([
             $generateType(10, 'prod'),
-            $generateType(12, 'cus')
+            $generateType(12, 'cus'),
         ]);
 
         expect(JasaraUuid::getMap())->toMatchArray([
@@ -62,7 +61,6 @@ describe('useMap', function () {
 });
 
 describe('generate', function () {
-
     it('generates valid uuid')
         ->expect(fn () => (new Ramsey\Uuid\Rfc4122\Validator())->validate(JasaraUuid::generate(random_int(0, 2047))->toStandard()))
         ->toBeTrue();
@@ -74,7 +72,7 @@ describe('generate', function () {
     it('generates uuid for given type', function (int $type) {
         $uuid = JasaraUuid::generate($type);
 
-        $typeHex = str_pad(dechex($type), 3, "0", STR_PAD_LEFT);
+        $typeHex = str_pad(dechex($type), 3, '0', STR_PAD_LEFT);
 
         expect($uuid->toStandard())
             ->toMatch("/[0-9a-f]{8}-[0-9a-f]{4}-8$typeHex-[0-9a-f]{4}-[0-9a-f]{8}/");
@@ -82,7 +80,7 @@ describe('generate', function () {
 
     // 2024-05-19 06:35:10.391 UTC in Unix Epoch (hex) = 018f 8f8f 8f8f
     it('generates uuid for type from type and timestamp')
-        ->expect(fn () => JasaraUuid::generate(0x7cd, new DateTime("2024-05-19 06:35:01.391"))->toStandard())
+        ->expect(fn () => JasaraUuid::generate(0x7CD, new DateTime('2024-05-19 06:35:01.391'))->toStandard())
         ->toMatch('/018f8f8f-8f8f-87cd-[0-9a-f]{4}-[0-9a-f]{12}/');
 
     it('fails to generate for type outside 0 - 2047')
@@ -91,11 +89,12 @@ describe('generate', function () {
         ->toThrow(JasaraUuidException::class);
 
     it('can take JasaraUuidType for $type', function () {
-        $jasaraUuidType = new class () implements JasaraUuidType {
+        $jasaraUuidType = new class() implements JasaraUuidType {
             public function numeric(): int
             {
                 return 0x101;
             }
+
             public function prefix(): string
             {
                 return 'card';
@@ -105,7 +104,6 @@ describe('generate', function () {
 
         expect(JasaraUuid::generate($jasaraUuidType)->toStandard())
             ->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-8101-[0-9a-f]{4}-[0-9a-f]{12}$/');
-
     });
 
     it('can take prefix for $type', function () {
@@ -121,11 +119,9 @@ describe('generate', function () {
         expect(fn () => JasaraUuid::generate('other')->toStandard())
             ->toThrow(JasaraUuidException::class, "Prefix 'other' does not have a corresponding type value.");
     });
-
 });
 
 describe('from:prefixed', function () {
-
     beforeEach(function () {
         JasaraUuid::useMap([
             0 => 'usr',
@@ -135,7 +131,6 @@ describe('from:prefixed', function () {
     });
 
     it('returns same uuid', function () {
-
         $uuid = JasaraUuid::generate(2);
 
         $prefixed = $uuid->toPrefixed();

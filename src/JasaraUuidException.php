@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Jasara\Uuid;
 
-use Exception;
-use Throwable;
-
-final class JasaraUuidException extends Exception
+final class JasaraUuidException extends \Exception
 {
     private function __construct(
-        string $message = "",
+        string $message = '',
         int $code = 0,
-        ?Throwable $previous = null,
+        \Throwable $previous = null,
     ) {
         parent::__construct($message, $code, $previous);
     }

@@ -14,7 +14,7 @@ trait WithStaticMap
         static::$map = [];
         static::$map_inversed = [];
 
-        foreach($map as $key => $value) {
+        foreach ($map as $key => $value) {
             if (is_string($value)) {
                 static::$map[$key] = $value;
                 static::$map_inversed[$value] = $key;
@@ -36,7 +36,7 @@ trait WithStaticMap
 
     public static function getPrefix(int $type): string
     {
-        if (! array_key_exists($type, static::$map)) {
+        if (!array_key_exists($type, static::$map)) {
             throw JasaraUuidException::undefinedType($type);
         }
 
@@ -45,7 +45,7 @@ trait WithStaticMap
 
     public static function getType(string $prefix): int
     {
-        if (! array_key_exists($prefix, static::$map_inversed)) {
+        if (!array_key_exists($prefix, static::$map_inversed)) {
             throw JasaraUuidException::undefinedPrefix($prefix);
         }
 

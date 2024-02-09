@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Jasara\Uuid;
 
-use DateTimeInterface;
-use Jasara\Uuid\Base32WordSafe;
 use Ramsey\Uuid\Uuid;
-use Stringable;
 
-final class JasaraUuid implements Stringable
+final class JasaraUuid implements \Stringable
 {
     use WithStaticMap;
     use WithBinaryValidation;
@@ -47,7 +44,7 @@ final class JasaraUuid implements Stringable
 
     public static function generate(
         int|string|JasaraUuidType $type,
-        ?DateTimeInterface $datetime = null,
+        \DateTimeInterface $datetime = null,
     ): static {
         if ($type instanceof JasaraUuidType) {
             $type = $type->numeric();
@@ -57,7 +54,7 @@ final class JasaraUuid implements Stringable
             $type = static::getType($type);
         }
 
-        if ($type < 0 || $type > 0x7ff) {
+        if ($type < 0 || $type > 0x7FF) {
             throw JasaraUuidException::outOfBoundType();
         }
 
@@ -75,14 +72,14 @@ final class JasaraUuid implements Stringable
         $hex = bin2hex($this->binary);
 
         return substr($hex, 0, 8)
-            . '-'
-            . substr($hex, 8, 4)
-            . '-'
-            . substr($hex, 12, 4)
-            . '-'
-            . substr($hex, 16, 4)
-            . '-'
-            . substr($hex, 20, 12)
+            .'-'
+            .substr($hex, 8, 4)
+            .'-'
+            .substr($hex, 12, 4)
+            .'-'
+            .substr($hex, 16, 4)
+            .'-'
+            .substr($hex, 20, 12)
         ;
     }
 
@@ -95,7 +92,7 @@ final class JasaraUuid implements Stringable
     {
         $shorts = unpack('n*', $this->binary);
 
-        $prefix = static::getPrefix($shorts[4] & 0xfff);
+        $prefix = static::getPrefix($shorts[4] & 0xFFF);
 
         $shorts = [
             ...array_slice($shorts, 4, 4),
@@ -103,12 +100,12 @@ final class JasaraUuid implements Stringable
         ];
 
         // shift left 2
-        for($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 7; ++$i) {
             $carry = ($i < 6 ? $shorts[$i + 1] : 0) >> 14;
-            $shorts[$i] = ($shorts[$i] & 0x3fff) << 2 | $carry;
+            $shorts[$i] = ($shorts[$i] & 0x3FFF) << 2 | $carry;
         }
 
-        return $prefix . '_' . substr(Base32WordSafe::encode(pack('n*', ...$shorts)), 0, 22);
+        return $prefix.'_'.substr(Base32WordSafe::encode(pack('n*', ...$shorts)), 0, 22);
     }
 
     private static function fromPrefixed(string $prefixed): static
@@ -120,7 +117,7 @@ final class JasaraUuid implements Stringable
         $shorts = unpack('n*', Base32WordSafe::decode($rest));
 
         // shift right 2
-        for($i = 1, $carry = 0; $i <= 7; $i++) {
+        for ($i = 1, $carry = 0; $i <= 7; ++$i) {
             $current = $shorts[$i];
             $shorts[$i] = ($current >> 2) | ($carry << 14);
             $carry = $current & 0x0003;
